@@ -1,0 +1,24 @@
+# secrets
+.env
+.env.*
+!.env.example
+/backend/env
+
+# biometric data (face / voice embeddings) - never commit
+backend/chroma_data/
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+venv/
+.venv/
+
+# node / build output
+node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
