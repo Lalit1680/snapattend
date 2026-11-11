@@ -1,0 +1,72 @@
+# ==========================================================================
+# SnapAttend — backend dependencies
+#
+# Tested with Python 3.11 / 3.12. Some native packages (dlib for
+# face-recognition, torch pulled in by Resemblyzer) are heavy; see the
+# README for platform-specific install notes (especially dlib on Windows).
+# ==========================================================================
+
+# --- Web framework ---------------------------------------------------------
+Flask==3.0.3
+Werkzeug==3.0.3
+python-dotenv==1.0.1
+gunicorn==22.0.0            # optional production WSGI server; not needed for local dev
+
+# --- Auth & security -------------------------------------------------------
+Flask-JWT-Extended==4.6.0
+bcrypt==4.1.3
+itsdangerous==2.2.0        # signed, expiring invite / reset / QR tokens
+Flask-Limiter==3.7.0
+Flask-Cors==4.0.1
+
+# --- Database (source of truth) -------------------------------------------
+pymongo==4.8.0
+dnspython==2.6.1           # required by pymongo to resolve mongodb+srv:// Atlas URIs
+
+# --- Email (invites, resets, alerts) --------------------------------------
+Flask-Mail==0.10.0
+
+# --- Vector store (embeddings + similarity search) ------------------------
+chromadb==0.5.5
+
+# --- Face recognition ------------------------------------------------------
+# face-recognition depends on dlib. On Windows, install a prebuilt dlib wheel
+# first (see README) or `pip install cmake` and a C++ build toolchain.
+#
+# The setuptools pin below is not optional and not cosmetic: `face_recognition`
+# pulls in `face_recognition_models`, which does `import pkg_resources` at import
+# time. setuptools 81 REMOVED pkg_resources, and pip installs the newest
+# setuptools into a fresh venv — so without this pin a perfectly good dlib build
+# still dies with `ModuleNotFoundError: No module named 'pkg_resources'`, which
+# reads like a broken native build and is not one.
+setuptools<81
+face-recognition==1.3.0
+opencv-python==4.10.0.84
+Pillow==10.4.0
+numpy==1.26.4              # pinned <2.0 for librosa/numba/chromadb compatibility
+
+# --- Voice recognition -----------------------------------------------------
+# Resemblyzer pulls in torch + librosa. torch is intentionally left unpinned so
+# pip resolves a wheel matching your platform/CPU/GPU.
+Resemblyzer==0.1.4
+librosa==0.10.2.post1
+soundfile==0.12.1
+
+# --- QR codes --------------------------------------------------------------
+qrcode[pil]==7.4.2
+
+# --- Tests (development only) ---------------------------------------------
+# The suite in tests/ is hermetic: it opens no socket, so no MongoDB and no
+# ChromaDB, and it imports none of the heavy native packages above — dlib,
+# torch, opencv and librosa are all imported lazily inside the functions that
+# use them, and no test calls one.
+#
+# What it does need is everything `import app` pulls in at module level:
+#
+#     Flask Werkzeug python-dotenv Flask-JWT-Extended Flask-Limiter Flask-Cors
+#     Flask-Mail bcrypt itsdangerous pymongo numpy pytest
+#
+# So `python -m pytest` works on a checkout where dlib has never been built.
+# Kept in this file rather than a separate requirements-dev.txt because the
+# README documents a single install command.
+pytest==8.3.2
